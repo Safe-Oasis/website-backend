@@ -1,0 +1,31 @@
+{
+    "name": "safeoasis-backend",
+    "version": "0.0.1",
+    "description": "",
+    "main": "server.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "LuciferMorningstarDev",
+    "license": "UNLICENSED",
+    "dependencies": {
+        "bcrypt": "^5.0.1",
+        "compression": "^1.7.4",
+        "cookie-parser": "^1.4.6",
+        "crypto": "^1.0.1",
+        "dotenv": "^16.0.1",
+        "ejs": "^3.1.8",
+        "express": "^4.18.1",
+        "express-fileupload": "^1.4.0",
+        "express-http-proxy": "^1.6.3",
+        "express-mongodb-session": "^3.2.1",
+        "express-rate-limit": "^6.5.1",
+        "express-session": "^1.17.3",
+        "gzip": "^0.1.0",
+        "ip6addr": "^0.2.5",
+        "mongodb": "^4.8.1",
+        "node-fetch": "^3.2.9",
+        "serve-favicon": "^2.5.0",
+        "uuid": "^8.3.2"
+    }
+}

@@ -1,0 +1,61 @@
+// Copyright © 2022 | LuciferMorningstarDev | All Rights Reserved | ( Email: contact@lucifer-morningstar.dev )
+
+@import url('https://necolas.github.io/normalize.css/8.0.1/normalize.css');
+@import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display&display=swap');
+
+@font-face {
+    font-family: Comfortaa;
+    src: url('/public/fonts/comfortaa/Comfortaa-Regular.ttf');
+    font-weight: normal;
+    font-style: normal;
+}
+
+* {
+    font-family: 'RedHatDisplay', sans-serif;
+}
+
+@import './scroller';
+
+html,
+body {
+    background: #111;
+    color: white;
+    overflow-x: hidden;
+    width: 100vw;
+    scroll-behavior: smooth;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+section {
+    padding: 15px;
+}
+
+@media only screen and (max-width: 1200px) {
+    section {
+        padding: 10px;
+    }
+}
+
+@media only screen and (max-width: 850px) {
+    section {
+        padding: 5px;
+    }
+}
+
+.noselect {
+    user-select: none;
+}
+
+.textselect {
+    user-select: text;
+}
+
+@import './header';
+@import './footer';

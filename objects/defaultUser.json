@@ -1,0 +1,29 @@
+{
+    "username": "default_user",
+    "hashed_password": "",
+    "email": "mail@example.com",
+    "uuid": "",
+    "createdAt": "",
+    "last_login": "",
+    "email_confirmed": false,
+    "email_confirmation_code": "",
+    "group": "GUEST",
+    "profile": "",
+    "connected_accounts": {
+        "discord": {
+            "userId": "",
+            "username": "",
+            "refresh_token": "",
+            "access_token": "",
+            "since": ""
+        }
+    },
+    "settings": {
+        "theme": "dark",
+        "privacy": {
+            "post_visibility": "followers",
+            "like_visibility": "private",
+            "can_add_follow": "everyone"
+        }
+    }
+}

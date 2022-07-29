@@ -1,0 +1,22 @@
+{
+    "admin": {
+        "id": 3,
+        "name": "Administrator",
+        "permission": "ADMINISTRATOR"
+    },
+    "moderator": {
+        "id": 2,
+        "name": "Moderator",
+        "permission": "MODERATOR"
+    },
+    "member": {
+        "id": 1,
+        "name": "Member",
+        "permissions": "MEMBER"
+    },
+    "guest": {
+        "id": 0,
+        "name": "Guest",
+        "permissions": "GUEST"
+    }
+}

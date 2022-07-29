@@ -1,0 +1,72 @@
+// Copyright © 2022 | LuciferMorningstarDev | All Rights Reserved | ( Email: contact@lucifer-morningstar.dev )
+
+.footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    height: 30vh;
+
+    .footer-logo-image {
+        width: 90px;
+    }
+
+    .footer-left {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+
+        .footer-nav {
+            width: 50vw;
+            height: 100px;
+
+            display: flex;
+            flex-grow: 1;
+            flex-shrink: 1;
+            flex-basis: 0;
+            text-align: left;
+            flex-direction: row;
+            justify-content: space-around;
+            align-items: center;
+
+            .nav-menu {
+                height: 100%;
+
+                .nav-title {
+                    color: #f5207f;
+                }
+            }
+        }
+
+        .nav-link {
+            margin: 10px;
+            margin-bottom: 15px;
+            color: silver;
+
+            cursor: pointer;
+
+            border-bottom: 1px solid transparent;
+
+            &:hover {
+                color: #f2e8e8;
+                border-bottom: 1px solid white;
+            }
+        }
+    }
+}
+.nav-link {
+    text-decoration: none;
+}
+
+.nav-icon {
+    margin: 8px;
+    color: silver;
+
+    cursor: pointer;
+
+    &:hover {
+        color: #f2e8e8;
+    }
+}
