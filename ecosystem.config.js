@@ -7,7 +7,7 @@ module.exports = {
             exec_mode: 'fork',
             watch: true,
             autorestart: true,
-            ignore_watch: ['./.git/*', './node_modules/*', './uploads/*'],
+            ignore_watch: ['./.git/*', './node_modules/*', './uploads/*', './app/*'],
         },
     ],
 };
