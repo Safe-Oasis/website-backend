@@ -23,6 +23,7 @@
         "express-session": "^1.17.3",
         "gzip": "^0.1.0",
         "ip6addr": "^0.2.5",
+        "jsonwebtoken": "^8.5.1",
         "mongodb": "^4.8.1",
         "node-fetch": "^3.2.9",
         "serve-favicon": "^2.5.0",

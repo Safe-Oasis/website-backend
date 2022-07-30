@@ -18,27 +18,26 @@ const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const compression = require('compression');
 const fileUpload = require('express-fileupload');
-
 const mongoSession = require('express-mongodb-session');
-const { randomBytes } = require('crypto');
-const bcrypt = require('bcrypt');
-
-const serveFavicon = require('serve-favicon');
 
 const fs = require('node:fs');
+const path = require('node:path');
+
+const bcrypt = require('bcrypt');
 
 const packageJSON = require('./package.json');
 
 const port = process.env.PORT;
 
-const defaultPath = process.cwd().endsWith('/') ? process.cwd() : process.cwd() + '/';
+const defaultPath = __dirname.endsWith('/') ? __dirname : __dirname + '/';
 
 const publicPath = defaultPath + 'public/';
 
-const MongoDBStore = mongoSession(session);
-
 // create app
 const app = express();
+app.data = { package: packageJSON };
+
+require('./modules/database').setupDatabaseHandler(app);
 
 // app middlewares
 app.use(compression());
@@ -50,6 +49,7 @@ app.set('json spaces', 4);
 app.set('view engine', 'ejs');
 
 // sessions setup
+const MongoDBStore = mongoSession(session);
 app.use(
     session({
         secret: process.env.SESSION_SECRET,
@@ -62,6 +62,8 @@ app.use(
     })
 );
 
+// authentication
+const auth = require('./middleware/auth');
 // for security reason remove the powered by header
 app.use(require('./middleware/removePoweredBy'));
 // CORS Policy things
@@ -69,29 +71,29 @@ app.use(require('./middleware/cors'));
 // Content security headers
 app.use(require('./middleware/contentSecurityPolicy'));
 
-// authentication
-const authRequired = require('./middleware/auth');
-
-// Basic redirects
-app.get('/github', async (req, res) => res.redirect('https://github.com/Safe-Oasis'));
-app.get('/discord', async (req, res) => res.redirect('https://discord.gg/fmjVTKH9Gy'));
-app.get('/join', async (req, res) => res.redirect('https://discord.gg/fmjVTKH9Gy'));
-app.get('/twitter', async (req, res) => res.redirect('https://twitter.com/SafeOasis'));
-app.get('/tiktok', async (req, res) => res.redirect('https://tiktok.com/@safeoasis'));
-app.get('/instagram', async (req, res) => res.redirect('https://instagram.com/safeoasis.xyz'));
-app.get('/tip', async (req, res) => res.redirect('https://www.buymeacoffee.com/safeoasis'));
-app.get('/donate', async (req, res) => res.redirect('https://www.buymeacoffee.com/safeoasis'));
-app.get('/email', async (req, res) => res.redirect('mailto:contact@safeoasis.xyz'));
-
-app.use('/public', express.static(publicPath));
-app.use('/uploads', express.static('uploads'));
 // serve favicon on each request
-app.use(serveFavicon(publicPath + 'favicon.ico'));
-
-require('./modules/database').setupDatabaseHandler(app);
+app.use(require('serve-favicon')(publicPath + 'favicon.ico'));
 
 // inject csrf token
-app.use(authRequired.injectCSRF);
+app.use(auth.injectCSRF);
+
+app.use('/public/', express.static(publicPath));
+app.use('/uploads/', express.static(defaultPath + 'uploads/'));
+app.use('/app/', express.static(defaultPath + 'app/build/'));
+app.use('/api/', require('./api')(app));
+
+// Basic redirects
+app.get('/github', async (_, res) => res.redirect('https://github.com/Safe-Oasis'));
+app.get('/discord', async (_, res) => res.redirect('https://discord.gg/fmjVTKH9Gy'));
+app.get('/join', async (_, res) => res.redirect('https://discord.gg/fmjVTKH9Gy'));
+app.get('/twitter', async (_, res) => res.redirect('https://twitter.com/SafeOasis'));
+app.get('/tiktok', async (_, res) => res.redirect('https://tiktok.com/@safeoasis'));
+app.get('/instagram', async (_, res) => res.redirect('https://instagram.com/safeoasis.xyz'));
+app.get('/tip', async (_, res) => res.redirect('https://www.buymeacoffee.com/safeoasis'));
+app.get('/donate', async (_, res) => res.redirect('https://www.buymeacoffee.com/safeoasis'));
+app.get('/email', async (_, res) => res.redirect('mailto:contact@safeoasis.xyz'));
+
+app.get('/robots.txt', async (_, res) => res.sendFile('./public/robots.txt'));
 
 app.use(
     fileUpload({
@@ -99,13 +101,26 @@ app.use(
         tempFileDir: '/tmp/',
         limits: { fileSize: 50 * 1024 * 1024 },
         limitHandler: (req, res) => {
-            return res.status(413).json({ error: true, message: 'TOO BIG (50mb)' });
+            return res.status(413).json({ error: true, message: 'FILE TOO BIG (max 50mb)' });
         },
     })
 );
 
 app.get('/', async (_, res) => {
     res.render('index', { path: '/' });
+});
+
+app.get('/tos', async (_, res) => res.redirect('/terms'));
+app.get('/terms', async (_, res) => {
+    res.render('terms', { path: '/terms' });
+});
+
+app.get('/privacy', async (_, res) => {
+    res.render('privacy', { path: '/privacy' });
+});
+
+app.get('/cookies', async (_, res) => {
+    res.render('cookies', { path: '/cookies' });
 });
 
 // 404 Handling
