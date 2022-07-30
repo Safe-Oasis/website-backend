@@ -68,5 +68,3 @@ typings/
 /.env.test
 
 package-lock.json
-
-/**/*.css
