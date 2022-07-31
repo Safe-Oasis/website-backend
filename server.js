@@ -207,7 +207,7 @@ app.get('/oauth2/discord/callback', async (req, res) => {
                             }
                             req.session.user = websiteUser;
                             req.session.user.profile = userProfile;
-                            res.redirect('/@me');
+                            res.redirect('/api/users/@me');
                         })
                         .catch((err) => {
                             console.error(err);
@@ -233,11 +233,6 @@ app.get('/logout', async (req, res) => {
     req.session.isLoggedIn = false;
     req.session.destroy();
     return res.redirect('/');
-});
-
-app.get('/@me', async (req, res) => {
-    if (!req.session.user) return res.json({ error: true, message: 'not logged in' });
-    res.json({ error: false, user: req.session.user });
 });
 
 // ============================== OAUTH2 ============================== //
