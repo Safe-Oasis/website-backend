@@ -37,7 +37,7 @@
         <script src="/public/scripts/login.js"></script>
     </head>
     <body class="noselect">
-        <a href="<%= path === '/' ? 'javascript:void(0);' : '/' %>" class="home"><i class="fas fa-home fa-2x home-icon"></i></a>
+        <!-- <a href="<%= path === '/' ? 'javascript:void(0);' : '/' %>" class="home"><i class="fas fa-home fa-2x home-icon"></i></a> -->
         <header class="header">
             <section class="header-brand">
                 <img class="header-banner" src="/public/images/banner.png" alt="header banner" />
@@ -46,7 +46,7 @@
 
             <section class="login-section">
                 <div class="oauth2-container">
-                    <a href="#" class="login login-discord" title="Login with Discord">
+                    <a href="/oauth2/discord/login" class="login login-discord" title="Login with Discord">
                         <i class="fab fa-discord fa-2x home-icon"></i>
                     </a>
                     <a href="#" class="login login-google" title="Login with Google">

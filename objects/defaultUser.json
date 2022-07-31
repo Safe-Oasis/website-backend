@@ -16,6 +16,13 @@
             "refresh_token": "",
             "access_token": "",
             "since": ""
+        },
+        "google": {
+            "userId": "",
+            "username": "",
+            "refresh_token": "",
+            "access_token": "",
+            "since": ""
         }
     },
     "settings": {

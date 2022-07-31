@@ -9,6 +9,7 @@ require('dotenv').config();
 import('node-fetch').then(({ default: fetch }) => {
     global.fetch = fetch;
 });
+const request = require('request');
 
 // imports
 const express = require('express');
@@ -24,6 +25,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const bcrypt = require('bcrypt');
+const { v4 } = require('uuid');
+
+const { deepUpdateObject, deepUpdateObjectCopy } = require('./modules/deepUpdateObject');
 
 const packageJSON = require('./package.json');
 
@@ -106,7 +110,8 @@ app.use(
     })
 );
 
-app.get('/', async (_, res) => {
+app.get('/', async (req, res) => {
+    if (req.session.user != null) return res.redirect('/app/');
     res.render('index', { path: '/' });
 });
 
@@ -122,6 +127,120 @@ app.get('/privacy', async (_, res) => {
 app.get('/cookies', async (_, res) => {
     res.render('cookies', { path: '/cookies' });
 });
+
+// ============================== OAUTH2 ============================== //
+
+var fetchDiscordUserByToken = async (token) => {
+    return new Promise(async (resolve, reject) => {
+        var response = await fetch(process.env.OAUTH2_DISCORD_APIURL + '/users/@me', {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        }).catch(reject);
+        var user = await response.json();
+        resolve(user);
+    });
+};
+
+app.get('/oauth2/discord/login', async (req, res) => {
+    if (req.session.user != null) return res.redirect('/');
+    res.redirect(process.env.OAUTH2_DISCORD_ENDPOINT);
+});
+
+app.get('/oauth2/discord/callback', async (req, res) => {
+    if (req.session.user != null) return res.redirect('/');
+    if (req.query?.error === 'access_denied') return res.redirect('/');
+
+    try {
+        let code = req.query.code;
+        if (!code) return res.redirect('/oauth2/discord/login');
+
+        request
+            .post(
+                process.env.OAUTH2_DISCORD_APIURL + '/oauth2/token',
+                {
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                },
+                (error, _, body) => {
+                    if (error) {
+                        console.error(error);
+                        return res.redirect('/oauth2/discord/login');
+                    }
+                    let obj = JSON.parse(body);
+                    // console.log(obj);
+                    let token = obj['access_token'];
+                    let refresh_token = obj['refresh_token'];
+                    fetchDiscordUserByToken(token)
+                        .then(async (user) => {
+                            let now = new Date();
+                            if (user.message) return res.redirect('/oauth2/discord/login');
+                            let websiteUser = await app.db.queryAsync('users', { 'connected_accounts.discord.userId': user.id }).catch(console.error);
+                            // console.log(websiteUser);
+                            let userProfile;
+                            if (!websiteUser[0]) {
+                                websiteUser = require('./objects/defaultUser.json');
+                                websiteUser.uuid = v4();
+                                userProfile = require('./objects/defaultProfile.json');
+                                userProfile.uuid = v4();
+                                websiteUser.profile = userProfile.uuid;
+                                userProfile.user = websiteUser.uuid;
+                                websiteUser.createdAt = now;
+                                websiteUser.last_login = now;
+                                websiteUser['connected_accounts']['discord']['userId'] = user.id;
+                                websiteUser['connected_accounts']['discord']['username'] = user.username;
+                                websiteUser['connected_accounts']['discord']['since'] = now;
+                                websiteUser['connected_accounts']['discord']['refresh_token'] = refresh_token;
+                                websiteUser['connected_accounts']['discord']['access_token'] = token;
+                                websiteUser.username = user.username;
+                                websiteUser.email = user.email;
+                                userProfile.display_name = user.username;
+                                await app.db.insertAsync('users', { ...websiteUser }).catch(console.error);
+                                await app.db.insertAsync('profiles', { ...userProfile }).catch(console.error);
+                            } else {
+                                websiteUser = websiteUser[0];
+                                app.db.updateAsync('users', { user: websiteUser.uuid }, { last_login: now });
+                                websiteUser.last_login = now;
+                                userProfile = await app.db.queryAsync('profiles', { user: websiteUser.uuid }).catch(console.error);
+                            }
+                            req.session.user = websiteUser;
+                            req.session.user.profile = userProfile;
+                            res.redirect('/@me');
+                        })
+                        .catch((err) => {
+                            console.error(err);
+                            res.redirect('/oauth2/discord/login');
+                        });
+                }
+            )
+            .form({
+                client_id: process.env.OAUTH2_DISCORD_CLIENT,
+                client_secret: process.env.OAUTH2_DISCORD_SECRET,
+                grant_type: 'authorization_code',
+                code: code,
+                redirect_uri: process.env.OAUTH2_BASE_HOST + '/oauth2/discord/callback',
+                scope: 'identify email guilds',
+            });
+    } catch (error) {
+        console.error(error);
+        return res.redirect('/');
+    }
+});
+
+app.get('/logout', async (req, res) => {
+    req.session.isLoggedIn = false;
+    req.session.destroy();
+    return res.redirect('/');
+});
+
+app.get('/@me', async (req, res) => {
+    if (!req.session.user) return res.json({ error: true, message: 'not logged in' });
+    res.json({ error: false, user: req.session.user });
+});
+
+// ============================== OAUTH2 ============================== //
 
 // 404 Handling
 app.get('*', async (_, res) => {
