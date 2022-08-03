@@ -140,7 +140,7 @@ app.use(
 // homepage route
 app.get('/', async (req, res) => {
     if (req.session.user != null) return res.redirect('/app/');
-    res.render('index', { path: '/' });
+    res.render('index', { path: '/', csrf_token: req.session.csrf, error: {} });
 });
 
 // terms route
@@ -269,8 +269,8 @@ app.get('/oauth2/discord/callback', async (req, res) => {
                                 let jwt_token = JWT.sign({ username: websiteUser.username, email: websiteUser.email, uuid: websiteUser.uuid }, process.env.JWT_SECRET);
                                 req.session.user = websiteUser;
                                 req.session.user.profile = userProfile;
-                                req.session.user.jwt = jwt_token;
                                 req.session.isLoggedIn = true;
+                                req.session.user.jwt = jwt_token;
 
                                 return res.redirect('/registered');
                             } else {
@@ -283,8 +283,8 @@ app.get('/oauth2/discord/callback', async (req, res) => {
                             let jwt_token = JWT.sign({ username: websiteUser.username, email: websiteUser.email, uuid: websiteUser.uuid }, process.env.JWT_SECRET);
                             req.session.user = websiteUser;
                             req.session.user.profile = userProfile;
-                            req.session.user.jwt = jwt_token;
                             req.session.isLoggedIn = true;
+                            req.session.user.jwt = jwt_token;
                             res.redirect('/api/users/@me');
                         })
                         .catch((err) => {
@@ -369,9 +369,11 @@ app.post('/register', async (req, res) => {
     await app.db.insertAsync('users', { ...websiteUser }).catch(console.error);
     await app.db.insertAsync('profiles', { ...userProfile }).catch(console.error);
 
+    let jwt_token = JWT.sign({ username: websiteUser.username, email: websiteUser.email, uuid: websiteUser.uuid }, process.env.JWT_SECRET);
     req.session.user = websiteUser;
     req.session.user.profile = userProfile;
     req.session.isLoggedIn = true;
+    req.session.user.jwt = jwt_token;
 
     sendmail(
         {
@@ -397,6 +399,52 @@ app.get('/logout', async (req, res) => {
     req.session.isLoggedIn = false;
     req.session.destroy(); // destroy user session
     res.redirect(req.query?.next ?? '/');
+});
+
+app.get('/login', async (req, res) => {
+    if (req.session.user != null) return res.redirect('/app/');
+    res.render('index', { path: '/login', csrf_token: req.session.csrf, error: {} });
+});
+
+app.post('/login', async (req, res) => {
+    if (req.session.user) return res.redirect('/');
+    const { username, password, csrf_token } = req.body;
+
+    if (!csrf_token || csrf_token != req.session.csrf) return res.render('index', { path: '/', csrf_token: req.session.csrf, error: { title: 'Invalid Request', description: 'Invalid or none CSRF token provided.' } });
+
+    if (!username) return res.render('index', { path: '/', csrf_token: req.session.csrf, error: { title: 'Invalid Request', description: 'No username specified.' } });
+    if (!password) return res.render('index', { path: '/', csrf_token: req.session.csrf, error: { title: 'Invalid Request', description: 'Password not existing or mismatch.' } });
+
+    let websiteUser;
+    if (validator.isEmail(username)) {
+        websiteUser = await app.db.queryAsync('users', { email: username });
+    } else {
+        websiteUser = await app.db.queryAsync('users', { username: username });
+    }
+
+    if (!websiteUser[0]) return res.render('index', { path: '/', csrf_token: req.session.csrf, error: { title: 'User does not exist.', description: 'There is no user with the given email or username' } });
+
+    websiteUser = websiteUser[0];
+
+    if (!websiteUser.hashed_password) {
+        if (websiteUser.connected_accounts.discord.refresh_token) return res.render('index', { path: '/', csrf_token: req.session.csrf, error: { title: 'Password Error.', description: 'You have not set any password. Please try to login via discord' } });
+        if (websiteUser.connected_accounts.google.refresh_token) return res.render('index', { path: '/', csrf_token: req.session.csrf, error: { title: 'Password Error.', description: 'You have not set any password. Please try to login via google' } });
+        return res.render('index', { path: '/', csrf_token: req.session.csrf, error: { title: 'Password Error.', description: 'You have not set any password. Please try to login via google or discord' } });
+    }
+
+    let canAccess = await bcrypt.compare(password, websiteUser.hashed_password);
+    if (!canAccess) return res.render('index', { path: '/', csrf_token: req.session.csrf, error: { title: 'Password Error.', description: 'The given password is incorrect.' } });
+
+    let userProfile = await app.db.queryAsync('profiles', { user: websiteUser.uuid });
+    userProfile = userProfile[0];
+
+    let jwt_token = JWT.sign({ username: websiteUser.username, email: websiteUser.email, uuid: websiteUser.uuid }, process.env.JWT_SECRET);
+    req.session.user = websiteUser;
+    req.session.user.profile = userProfile;
+    req.session.isLoggedIn = true;
+    req.session.user.jwt = jwt_token;
+
+    res.redirect('/api/users/@me');
 });
 
 app.get('/registered', async (req, res) => {

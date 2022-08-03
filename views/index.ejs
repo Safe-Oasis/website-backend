@@ -55,9 +55,18 @@
                 </div>
 
                 <div class="login-container">
-                    <input type="text" name="" id="user" />
-                    <input type="password" name="" id="password" />
-                    <a href="#" id="login">Login!</a>
+                    <div class="error">
+                        <h3 class="error-title"><%= error?.title ? error?.title : "Login to safeoasis.xyz" %></h3>
+                        <p class="error-description"><%= error?.description %></p>
+                    </div>
+                    <form action="/login" method="post">
+                        <input type="hidden" name="csrf_token" value="<%= csrf_token %>" />
+                        <label for="username">Username</label>
+                        <input type="text" name="username" id="username" />
+                        <label for="password">Password</label>
+                        <input type="password" name="password" id="password" />
+                        <button type="submit">Login!</button>
+                    </form>
                 </div>
 
                 <br />
