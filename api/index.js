@@ -62,5 +62,9 @@ module.exports = (app) => {
         res.json({ error: false, profile: profile });
     });
 
+    router.get('*', async (req, res) => {
+        res.status(404).json({ error: true, message: 'not found' });
+    });
+
     return router;
 };
