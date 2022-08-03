@@ -322,7 +322,7 @@ app.post('/register', async (req, res) => {
     const { username, email, password, password_confirm, csrf_token } = req.body;
 
     // validate request
-    if (!csrf_token || csrf_token != req.session.csrf) return res.render('register', { path: '/register', csrf_token: req.session.csrf, error: { title: 'Invalid Request', description: 'Invalid or none CSRF token provided.' } });
+    if (!csrf_token || csrf_token != req.session.csrf) return res.render('register', { path: '/register', csrf_token: req.session.csrf, error: { title: 'Invalid Request', description: 'Invalid or none CSRF token provided. Please reload the page.' } });
     if (!username) return res.render('register', { path: '/register', csrf_token: req.session.csrf, error: { title: 'Invalid Request', description: 'No username specified.' } });
     if (!email) return res.render('register', { path: '/register', csrf_token: req.session.csrf, error: { title: 'Invalid Request', description: 'No email specified.' } });
     if (!password || !password_confirm) return res.render('register', { path: '/register', csrf_token: req.session.csrf, error: { title: 'Invalid Request', description: 'Password not existing or mismatch.' } });
@@ -410,7 +410,7 @@ app.post('/login', async (req, res) => {
     if (req.session.user) return res.redirect('/');
     const { username, password, csrf_token } = req.body;
 
-    if (!csrf_token || csrf_token != req.session.csrf) return res.render('index', { path: '/', csrf_token: req.session.csrf, error: { title: 'Invalid Request', description: 'Invalid or none CSRF token provided.' } });
+    if (!csrf_token || csrf_token != req.session.csrf) return res.render('index', { path: '/', csrf_token: req.session.csrf, error: { title: 'Invalid Request', description: 'Invalid or none CSRF token provided. Please reload the page.' } });
 
     if (!username) return res.render('index', { path: '/', csrf_token: req.session.csrf, error: { title: 'Invalid Request', description: 'No username specified.' } });
     if (!password) return res.render('index', { path: '/', csrf_token: req.session.csrf, error: { title: 'Invalid Request', description: 'Password not existing or mismatch.' } });
