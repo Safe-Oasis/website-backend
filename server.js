@@ -369,7 +369,7 @@ app.get('/logout', async (req, res) => {
 
 app.get('/registered', async (req, res) => {
     if (!req.session.user) return res.redirect('/');
-    return res.render('email_confirm', { path: '/email/confirm', error: { title: 'Thanks for your registration at safeoasis.xyz', description: `A link to confirm your email address was sent to ${req.session.user.email}` } });
+    return res.render('email_confirm', { path: '/registered', uuid: req.session.user.uuid, error: { title: 'Thanks for your registration at safeoasis.xyz', description: `A link to confirm your email address was sent to ${req.session.user.email}` } });
 });
 
 app.get('/email/confirm/:uuid/:code', async (req, res) => {
@@ -377,7 +377,7 @@ app.get('/email/confirm/:uuid/:code', async (req, res) => {
     if (!code || !uuid) return res.redirect('/logout?next=/');
 
     let user = await app.db.queryAsync('users', { uuid });
-    if (user.length <= 0) return res.render('email_confirm', { path: '/email/confirm', error: { title: 'Wrong code or uuid provided.', description: 'The userId or confirmaion code does not exist.' } });
+    if (user.length <= 0) return res.render('email_confirm', { path: '/email/confirm', error: { title: 'Wrong code or uuid provided.', description: 'The userId or confirmation code does not exist.' } });
     user = user[0];
     if (code != user.email_confirmation_code) return res.render('email_confirm', { path: '/email/confirm', error: { title: 'Confirmation code invalid or expired.', description: 'Your email address could not been confirmed,' } });
 
@@ -388,6 +388,42 @@ app.get('/email/confirm/:uuid/:code', async (req, res) => {
     app.db.updateAsync('users', { uuid }, { email_confirmed: true });
 
     res.render('email_confirm', { path: '/email/confirm', error: { title: 'Email Confirmation', description: 'Thanks... The confirmation of your email was successful. You can use your full account now.' } });
+});
+
+app.get('/email/resend_confirm/:uuid', async (req, res) => {
+    let { uuid } = req.params;
+    if (!uuid && !req.session.user?.uuid) return res.redirect('/logout?next=/');
+    if (!uuid) uuid = req.session.user?.uuid;
+
+    let user = await app.db.queryAsync('users', { uuid });
+    if (user.length <= 0) return res.render('email_confirm', { path: '/email/confirm', error: { title: 'Wrong uuid provided.', description: 'The userId does not exist.' } });
+    user = user[0];
+
+    if (user.email_confirmed) return res.render('email_confirm', { path: '/email/confirm', error: { title: 'Email is already confirmed', description: 'Your email was confirmed before.' } });
+
+    user.email_confirmation_code = v4();
+    if (req.session.user) {
+        req.session.user.email_confirmation_code = user.email_confirmation_code;
+    }
+    await app.db.updateAsync('users', { uuid }, { email_confirmation_code: user.email_confirmation_code });
+
+    sendmail(
+        {
+            from: 'no-reply@safeoasis.xyz',
+            to: user.email,
+            subject: 'safeoasis.xyz - confirm your email',
+            text: fs
+                .readFileSync('./template/email/registered.txt', 'utf-8')
+                .replace(/{code}/g, `${user.uuid}/${user.email_confirmation_code}`)
+                .replace(/{host}/g, process.env.OAUTH2_BASE_HOST),
+        },
+        function (err, reply) {
+            // console.log(err && err.stack);
+            // console.dir(reply);
+        }
+    );
+
+    res.render('email_confirm', { path: '/registered', uuid: req.session.user.uuid, error: { title: 'Resend confirmation code', description: `A link to confirm your email address was sent again to ${req.session.user.email}` } });
 });
 
 // app.get('/testmail', async (req, res) => {

@@ -41,6 +41,11 @@
             <div class="terms">
                 <h3 class="error-title"><%= error.title %></h3>
                 <p class="error-description"><%= error.description %></p>
+                <% if(path === "/registered") { %>
+                <div class="resend-confirmation">
+                    <button onclick="window.location.href = '/email/resend_confirm/<%= uuid %>'; return false;">Resend Confirmation Code</button>
+                </div>
+                <% } %>
             </div>
         </header>
 
