@@ -6,11 +6,15 @@ const { randomBytes } = require('crypto');
 const JWT = require('jsonwebtoken');
 
 module.exports = (req, res, next) => {
-    if (!req.session.isLoggedIn) return res.redirect('/login');
+    // checks for a logged in user ( if not logged in redirect to homepage )
+    if (!req.session.isLoggedIn || !req.session.user) return res.redirect('/');
     next();
 };
 
-function extractToken(req) {
+// extracts a "Bearer token" from authorization header
+// or a token from a queryString
+// or a token provided in a JSON body {"authorization":"jwt_token"}
+const extractToken = (req) => {
     if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
         return req.headers.authorization.split(' ')[1];
     }
@@ -18,16 +22,23 @@ function extractToken(req) {
         return req.query.token;
     }
     if (req.body.authorization) {
-        return req.body.authorization;
+        return req.body.token;
     }
     return null;
-}
+};
 
 module.exports.authJWT = (req, res, next, app) => {
+    // get the token feom request extracted
     let token = extractToken(req);
-    if (!token) return next();
-    var decoded = JWT.verify(token, process.env.JWT_SECRET);
-    if (!decoded.uuid) return next();
+    if (!token) return next(); // if there is no token call next
+    let decoded;
+    try {
+        decoded = JWT.verify(token, process.env.JWT_SECRET); // verify JWT
+    } catch (error) {
+        return next();
+    }
+    if (!decoded?.uuid) return next();
+    // if the JWT token is valid search for the user and append the user data to the request
     app.db
         .queryAsync('users', { uuid: decoded.uuid })
         .then((users) => {
@@ -42,6 +53,7 @@ module.exports.authJWT = (req, res, next, app) => {
         .catch((err) => next());
 };
 
+// appends the session by a random csrf token to validate requests
 module.exports.injectCSRF = (req, res, next) => {
     if (!req.session.csrf) {
         req.session.csrf = randomBytes(100).toString('base64');
@@ -49,6 +61,7 @@ module.exports.injectCSRF = (req, res, next) => {
     next();
 };
 
+// updates the session csrf token
 module.exports.updateCSRF = (req) => {
     req.session.csrf = randomBytes(100).toString('base64');
 };
