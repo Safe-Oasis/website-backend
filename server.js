@@ -32,14 +32,17 @@ const validator = require('validator');
 
 const { deepUpdateObject, deepUpdateObjectCopy } = require('./modules/deepUpdateObject');
 
+// load package.json information
 const packageJSON = require('./package.json');
 
+// get the webserver port from .env config
 const port = process.env.PORT;
 
+// default and public paths
 const defaultPath = __dirname.endsWith('/') ? __dirname : __dirname + '/';
-
 const publicPath = defaultPath + 'public/';
 
+// setup sendmail
 const sendmail = require('sendmail')({
     logger: {
         debug: console.log,
@@ -48,29 +51,30 @@ const sendmail = require('sendmail')({
         error: console.error,
     },
     silent: false,
-    devPort: 25, // Default: False
-    devHost: 'localhost', // Default: localhost
-    smtpPort: 25, // Default: 25
-    smtpHost: 'localhost', // Default: -1 - extra smtp host after resolveMX
+    devPort: 25,
+    devHost: 'localhost',
+    smtpPort: 25,
+    smtpHost: 'localhost',
 });
 
-// create app
+// create express application and init/append some data
 const app = express();
 app.data = { package: packageJSON };
 
+// load database handler, initialite it, and append it to express-app
 require('./modules/database').setupDatabaseHandler(app);
 
 // app middlewares
-app.use(compression());
-app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(compression()); // compresses all request data
+app.use(cookieParser()); // parses cookies and add it to the req variable ( req.cookies )
+app.use(express.json()); // parses json bodys and append data to req variable ( req.body )
+app.use(express.urlencoded({ extended: false })); // parses urlencoded bodys and append data to req variable ( req.body )
 
-app.set('json spaces', 4);
-app.set('view engine', 'ejs');
+app.set('json spaces', 4); // set default json indention
+app.set('view engine', 'ejs'); // apply ejs template loader to express
 
 // sessions setup
-const MongoDBStore = mongoSession(session);
+const MongoDBStore = mongoSession(session); // makes sessions saved in mongo database
 app.use(
     session({
         secret: process.env.SESSION_SECRET,
@@ -101,6 +105,7 @@ app.use(require('serve-favicon')(publicPath + 'favicon.ico'));
 // inject csrf token
 app.use((req, res, next) => auth.authJWT(req, res, next, app));
 
+// public served directories
 app.use('/public/', express.static(publicPath));
 app.use('/uploads/', express.static(defaultPath + 'uploads/'));
 app.use('/app/', express.static(defaultPath + 'app/build/'));
@@ -117,8 +122,10 @@ app.get('/tip', async (_, res) => res.redirect('https://www.buymeacoffee.com/saf
 app.get('/donate', async (_, res) => res.redirect('https://www.buymeacoffee.com/safeoasis'));
 app.get('/email', async (_, res) => res.redirect('mailto:contact@safeoasis.xyz'));
 
+// loads the robots.txt ( SEO )
 app.get('/robots.txt', async (_, res) => res.sendFile('./public/robots.txt'));
 
+// makes expres able to read uploaded files
 app.use(
     fileUpload({
         useTempFiles: true,
@@ -130,26 +137,33 @@ app.use(
     })
 );
 
+// homepage route
 app.get('/', async (req, res) => {
     if (req.session.user != null) return res.redirect('/app/');
     res.render('index', { path: '/' });
 });
 
+// terms route
 app.get('/tos', async (_, res) => res.redirect('/terms'));
 app.get('/terms', async (_, res) => {
     res.render('terms', { path: '/terms' });
 });
 
+// provacy policy route
 app.get('/privacy', async (_, res) => {
     res.render('privacy', { path: '/privacy' });
 });
 
+// cookie policy route
 app.get('/cookies', async (_, res) => {
     res.render('cookies', { path: '/cookies' });
 });
 
 // ============================== OAUTH2 ============================== //
 
+/**
+ * This method fetches userdata by a given oauth2 user token
+ */
 var fetchDiscordUserByToken = async (token) => {
     return new Promise(async (resolve, reject) => {
         var response = await fetch(process.env.OAUTH2_DISCORD_APIURL + '/users/@me', {
@@ -163,19 +177,26 @@ var fetchDiscordUserByToken = async (token) => {
     });
 };
 
+// route to redirect to the discord oauth2 endpoint ( the user has to confirm that we can read emails/identity/guilds )
 app.get('/oauth2/discord/login', async (req, res) => {
     if (req.session.user != null) return res.redirect('/');
     res.redirect(process.env.OAUTH2_DISCORD_ENDPOINT);
 });
 
+// this route gets called when discord redirects to our server
+// a code with which we can receive a authentication and refresh token
 app.get('/oauth2/discord/callback', async (req, res) => {
-    if (req.session.user != null) return res.redirect('/');
+    // if a user is already logged in redirect him to homepage
+    if (req.session.user != null) return res.redirect('/app/');
+    // if a user declines the discord oauth2 page... this url does contain a error querystring of access_denied...
+    // so we redirect him back to the startpage
     if (req.query?.error === 'access_denied') return res.redirect('/');
 
     try {
         let code = req.query.code;
-        if (!code) return res.redirect('/oauth2/discord/login');
+        if (!code) return res.redirect('/oauth2/discord/login'); // if there is no code the user has to accept the discord oauth2 endpoint again
 
+        // request the access and refresh tokens from discord
         request
             .post(
                 process.env.OAUTH2_DISCORD_APIURL + '/oauth2/token',
@@ -186,13 +207,17 @@ app.get('/oauth2/discord/callback', async (req, res) => {
                 },
                 (error, _, body) => {
                     if (error) {
+                        // if any error in this request occures he user has to accept us again
                         console.error(error);
                         return res.redirect('/oauth2/discord/login');
                     }
+                    // load the json data with the tokens
                     let obj = JSON.parse(body);
                     // console.log(obj);
                     let token = obj['access_token'];
                     let refresh_token = obj['refresh_token'];
+
+                    // finally fetch the discord userdata which we need to connect accounts
                     fetchDiscordUserByToken(token)
                         .then(async (user) => {
                             let now = new Date();
@@ -200,6 +225,8 @@ app.get('/oauth2/discord/callback', async (req, res) => {
                             let websiteUser = await app.db.queryAsync('users', { 'connected_accounts.discord.userId': user.id }).catch(console.error);
                             // console.log(websiteUser);
                             let userProfile;
+                            // create a new websiteUser with profile if there is none connected with this discord account
+                            // TODO: connect the discord user to a user when there is one with the same mail
                             if (!websiteUser[0]) {
                                 websiteUser = require('./objects/defaultUser.json');
                                 websiteUser.uuid = v4();
@@ -233,9 +260,12 @@ app.get('/oauth2/discord/callback', async (req, res) => {
                                         // console.dir(reply);
                                     }
                                 );
+
+                                // insert profile and user data to the database
                                 await app.db.insertAsync('users', { ...websiteUser }).catch(console.error);
                                 await app.db.insertAsync('profiles', { ...userProfile }).catch(console.error);
 
+                                // create a JWT for authentication in api requests
                                 let jwt_token = JWT.sign({ username: websiteUser.username, email: websiteUser.email, uuid: websiteUser.uuid }, process.env.JWT_SECRET);
                                 req.session.user = websiteUser;
                                 req.session.user.profile = userProfile;
@@ -249,6 +279,7 @@ app.get('/oauth2/discord/callback', async (req, res) => {
                                 websiteUser.last_login = now;
                                 userProfile = await app.db.queryAsync('profiles', { user: websiteUser.uuid }).catch(console.error);
                             }
+                            // create a JWT for authentication in api requests
                             let jwt_token = JWT.sign({ username: websiteUser.username, email: websiteUser.email, uuid: websiteUser.uuid }, process.env.JWT_SECRET);
                             req.session.user = websiteUser;
                             req.session.user.profile = userProfile;
@@ -334,6 +365,7 @@ app.post('/register', async (req, res) => {
     userProfile.display_name = username;
     websiteUser.hashed_password = await bcrypt.hash(password, Number(process.env.SALT_ROUNDS));
 
+    // insert profile and user data to the database
     await app.db.insertAsync('users', { ...websiteUser }).catch(console.error);
     await app.db.insertAsync('profiles', { ...userProfile }).catch(console.error);
 
@@ -363,7 +395,7 @@ app.post('/register', async (req, res) => {
 
 app.get('/logout', async (req, res) => {
     req.session.isLoggedIn = false;
-    req.session.destroy();
+    req.session.destroy(); // destroy user session
     res.redirect(req.query?.next ?? '/');
 });
 
@@ -436,6 +468,7 @@ app.all('*', async (_, res) => {
     res.status(404).json({ error: true, message: 'not found' });
 });
 
+// finally create server listening to the port specified by .env config
 app.listen(port, () => {
     console.log('HTTP WEBSERVER Server running on Port ' + port);
 });
