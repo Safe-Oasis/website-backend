@@ -41,7 +41,7 @@
         <header class="header">
             <section class="register-section">
                 <div class="error">
-                    <h3 class="error-title"><%= error?.title %></h3>
+                    <h3 class="error-title"><%= error?.title ? error?.title : "Register at safeoasis.xyz" %></h3>
                     <p class="error-description"><%= error?.description %></p>
                 </div>
                 <form id="register-form" action="/register" method="post">
@@ -58,6 +58,13 @@
 
                     <button type="submit">Create Account</button>
                 </form>
+                <div class="drops">
+                    <div class="drop drop-1"></div>
+                    <div class="drop drop-2"></div>
+                    <div class="drop drop-3"></div>
+                    <div class="drop drop-4"></div>
+                    <div class="drop drop-5"></div>
+                </div>
             </section>
         </header>
 

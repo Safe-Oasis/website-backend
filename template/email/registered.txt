@@ -1,0 +1,11 @@
+Thanks for your registration at {host}
+
+Please confirm your email address by clicking the link below.
+{host}/email/confirm/{code}
+
+Useful Links:
+Website: {host}/
+Discord: {host}/discord
+Twitter: {host}/twitter
+Insta:   {host}/instagram
+TikTok:  {host}/tiktok

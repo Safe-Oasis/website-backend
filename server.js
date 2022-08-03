@@ -223,8 +223,8 @@ app.get('/oauth2/discord/callback', async (req, res) => {
                                         from: 'no-reply@safeoasis.xyz',
                                         to: websiteUser.email,
                                         subject: 'safeoasis.xyz - confirm your email',
-                                        html: fs
-                                            .readFileSync('./template/email/registered.html', 'utf-8')
+                                        text: fs
+                                            .readFileSync('./template/email/registered.txt', 'utf-8')
                                             .replace(/{code}/g, `${websiteUser.uuid}/${websiteUser.email_confirmation_code}`)
                                             .replace(/{host}/g, process.env.OAUTH2_BASE_HOST),
                                     },
@@ -346,8 +346,8 @@ app.post('/register', async (req, res) => {
             from: 'no-reply@safeoasis.xyz',
             to: websiteUser.email,
             subject: 'safeoasis.xyz - confirm your email',
-            html: fs
-                .readFileSync('./template/email/registered.html', 'utf-8')
+            text: fs
+                .readFileSync('./template/email/registered.txt', 'utf-8')
                 .replace(/{code}/g, `${websiteUser.uuid}/${websiteUser.email_confirmation_code}`)
                 .replace(/{host}/g, process.env.OAUTH2_BASE_HOST),
         },
