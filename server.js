@@ -228,7 +228,7 @@ app.get('/oauth2/discord/callback', async (req, res) => {
                                             .replace(/{code}/g, `${websiteUser.uuid}/${websiteUser.email_confirmation_code}`)
                                             .replace(/{host}/g, process.env.OAUTH2_BASE_HOST),
                                     },
-                                    function (err, reply) {
+                                    (err, reply) => {
                                         // console.log(err && err.stack);
                                         // console.dir(reply);
                                     }
@@ -351,7 +351,7 @@ app.post('/register', async (req, res) => {
                 .replace(/{code}/g, `${websiteUser.uuid}/${websiteUser.email_confirmation_code}`)
                 .replace(/{host}/g, process.env.OAUTH2_BASE_HOST),
         },
-        function (err, reply) {
+        (err, reply) => {
             // console.log(err && err.stack);
             // console.dir(reply);
         }
@@ -417,7 +417,7 @@ app.get('/email/resend_confirm/:uuid', async (req, res) => {
                 .replace(/{code}/g, `${user.uuid}/${user.email_confirmation_code}`)
                 .replace(/{host}/g, process.env.OAUTH2_BASE_HOST),
         },
-        function (err, reply) {
+        (err, reply) => {
             // console.log(err && err.stack);
             // console.dir(reply);
         }
@@ -425,41 +425,6 @@ app.get('/email/resend_confirm/:uuid', async (req, res) => {
 
     res.render('email_confirm', { path: '/registered', uuid: req.session.user.uuid, error: { title: 'Resend confirmation code', description: `A link to confirm your email address was sent again to ${req.session.user.email}` } });
 });
-
-// app.get('/testmail', async (req, res) => {
-//     res.send(`
-// <form action="" method="post">
-//     <p class="txt"></p>
-//     <input type="email" name="email" id="email" />
-//     <button type="submit">send</button>
-// </form>
-//     `);
-// });
-
-// app.post('/testmail', async (req, res) => {
-//     sendmail(
-//         {
-//             from: 'no-reply@safeoasis.xyz',
-//             to: req.body.email,
-//             subject: 'Confirm your Email',
-//             html: fs
-//                 .readFileSync('./template/email/registered.html', 'utf-8')
-//                 .replace(/{code}/g, 'just-a-test-email')
-//                 .replace(/{host}/g, process.env.OAUTH2_BASE_HOST),
-//         },
-//         function (err, reply) {
-//             console.log(err && err.stack);
-//             console.dir(reply);
-//         }
-//     );
-//     res.send(`
-// <form action="" method="post">
-//     <p class="txt">sent</p>
-//     <input type="email" name="email" id="email" />
-//     <button type="submit">send</button>
-// </form>
-//     `);
-// });
 
 // ============================== ACCOUNTS ============================== //
 
