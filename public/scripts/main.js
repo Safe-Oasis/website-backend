@@ -8,10 +8,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const pauseButton = document.querySelector('#pause');
     const volumeInput = document.querySelector('#volume');
 
-    console.log(music, playButton, pauseButton, volumeInput);
-
     playButton.onclick = () => {
-        console.log('playButton.addEventListener');
         music.play();
         let vol = 0 + volumeInput.value / 100;
         music.volume = vol;
@@ -20,7 +17,6 @@ window.addEventListener('DOMContentLoaded', () => {
     };
 
     pauseButton.onclick = () => {
-        console.log('pauseButton.addEventListener');
         music.pause();
         playButton.style.display = 'block';
         pauseButton.style.display = 'none';
@@ -61,7 +57,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (e.key == 'ArrowUp' || e.key == 'ArrowDown') e.preventDefault();
     });
 
-    document.addEventListener('keyup', (e) => {
+    window.addEventListener('keyup', (e) => {
         if (e.key == ' ' || e.key == 'p') {
             if (isTyping) return;
             if (playButton.style.display == 'none') {
