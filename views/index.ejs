@@ -34,10 +34,31 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
         <link rel="stylesheet" href="/public/sass/style.css" />
-        <script src="/public/scripts/login.js"></script>
+        <script defer src="/public/scripts/main.js"></script>
     </head>
     <body class="noselect">
         <!-- <a href="<%= path === '/' ? 'javascript:void(0);' : '/' %>" class="home"><i class="fas fa-home fa-2x home-icon"></i></a> -->
+        <div class="container-player">
+            <audio id="music" preload="auto" loop="false">
+                <source src="https://stream.safeoasis.xyz/" type="audio/mp3" />
+            </audio>
+            <div class="player">
+                <div class="info-dj">
+                    <h1 id="dj-name">stream.safeoasis.xyz</h1>
+                </div>
+                <div>
+                    <div id="play">
+                        <i class="control-item fas fa-play"></i>
+                    </div>
+                    <div id="pause">
+                        <i class="control-item fas fa-pause"></i>
+                    </div>
+                </div>
+                <div class="volume-control">
+                    <input id="volume" type="range" min="0" max="100" value="80" />
+                </div>
+            </div>
+        </div>
         <header class="header">
             <section class="header-brand">
                 <img class="header-banner" src="/public/images/banner.png" alt="header banner" />
