@@ -38,14 +38,15 @@
     </head>
     <body class="noselect">
         <!-- <a href="<%= path === '/' ? 'javascript:void(0);' : '/' %>" class="home"><i class="fas fa-home fa-2x home-icon"></i></a> -->
-        <div class="container-player">
+        <div id="container-player" class="container-player">
             <audio id="music" preload="auto" loop="false">
                 <source src="https://stream.safeoasis.xyz/" type="audio/mp3" />
             </audio>
-            <div class="player">
-                <div class="info-dj">
+            <div id="player" class="player">
+                <!-- <div class="info-dj">
                     <h1 id="dj-name">stream.safeoasis.xyz</h1>
-                </div>
+                </div> -->
+                <img class="brand-player" src="/public/images/logo_64.png" alt="logo" />
                 <div>
                     <div id="play">
                         <i class="control-item fas fa-play"></i>
@@ -75,12 +76,12 @@
                     </a>
                 </div>
 
-                <div class="login-container">
+                <div id="ex1-layer" class="login-container">
                     <div class="error">
                         <h3 class="error-title"><%= error?.title ? error?.title : "Login to safeoasis.xyz" %></h3>
                         <p class="error-description"><%= error?.description %></p>
                     </div>
-                    <form action="/login" method="post">
+                    <form id="loginForm" action="/login" method="post">
                         <input type="hidden" name="csrf_token" value="<%= csrf_token %>" />
                         <label for="username">Username</label>
                         <input type="text" name="username" id="username" />

@@ -4,10 +4,8 @@
     position: fixed;
     z-index: 9999;
     top: 5px;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 5px;
     max-height: 80px;
-    width: 80vw;
 
     display: flex;
     flex-direction: row;
@@ -15,7 +13,11 @@
     align-items: center;
 
     $player-height: 60px;
-    $player-width: 70vw;
+    $player-width: 250px;
+
+    .brand-player {
+        width: 50px;
+    }
 
     .player {
         height: $player-height;
@@ -290,6 +292,11 @@
                 font-weight: 500;
                 transition: all 0.2s ease-in-out;
                 text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+
+                &:-webkit-autofill {
+                    color: #fff !important;
+                    background: transparent !important;
+                }
 
                 &:hover {
                     background: rgba(255, 255, 255, 0.1);

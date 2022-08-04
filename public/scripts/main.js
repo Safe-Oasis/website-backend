@@ -1,3 +1,24 @@
+const add3dHoverAnimation = (constrain, mouseOverContainer, ex1Layer) => {
+    function transforms(x, y, el) {
+        let box = el.getBoundingClientRect();
+        let calcX = -(y - box.y - box.height / 2) / constrain;
+        let calcY = (x - box.x - box.width / 2) / constrain;
+        return 'perspective(100px) ' + '   rotateX(' + calcX + 'deg) ' + '   rotateY(' + calcY + 'deg) ';
+    }
+
+    function transformElement(el, xyEl) {
+        el.style.transform = transforms.apply(null, xyEl);
+    }
+
+    mouseOverContainer.onmousemove = function (e) {
+        let xy = [e.clientX, e.clientY];
+        let position = xy.concat([ex1Layer]);
+        window.requestAnimationFrame(function () {
+            transformElement(ex1Layer, position);
+        });
+    };
+};
+
 window.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('contextmenu', (e) => {
         e.preventDefault();
@@ -99,4 +120,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    add3dHoverAnimation(220, document.getElementById('loginForm'), document.getElementById('ex1-layer'));
+    add3dHoverAnimation(250, document.getElementById('player'), document.getElementById('container-player'));
 });
